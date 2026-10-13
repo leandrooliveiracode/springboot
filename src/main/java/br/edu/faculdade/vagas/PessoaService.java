@@ -16,41 +16,56 @@ public class PessoaService {
         this.repositorio = repositorio;
     }
 
-    public List<Pessoa> listar() {
-        return repositorio.todas();
-    }
-
-    public Optional<Pessoa> buscarPorId(String id) {
+    public List<PessoaResposta> listar() {
         return repositorio.todas().stream()
-                .filter(p -> p.id().equals(id))
-                .findFirst();
+                .map(this::paraResposta)
+                .toList();
     }
 
-    public Pessoa criar(Pessoa nova) {
-        Pessoa comId = new Pessoa(
+    public Optional<PessoaResposta> buscarPorId(String id) {
+        return repositorio.porId(id)
+                .map(this::paraResposta);
+    }
+
+    public PessoaResposta criar(PessoaEntrada entrada) {
+        Pessoa nova = new Pessoa(
                 UUID.randomUUID().toString(),
-                nova.nome(),
-                nova.email(),
-                nova.area(),
-                nova.senioridade()
+                entrada.nome(),
+                entrada.email(),
+                entrada.area(),
+                entrada.senioridade()
         );
 
-        return repositorio.salvar(comId);
+        Pessoa salva = repositorio.salvar(nova);
+        return paraResposta(salva);
     }
 
-    public Optional<Pessoa> trocar(String id, Pessoa nova) {
-        Pessoa comId = new Pessoa(
+    public Optional<PessoaResposta> trocar(
+            String id, PessoaEntrada entrada) {
+
+        Pessoa nova = new Pessoa(
                 id,
-                nova.nome(),
-                nova.email(),
-                nova.area(),
-                nova.senioridade()
+                entrada.nome(),
+                entrada.email(),
+                entrada.area(),
+                entrada.senioridade()
         );
 
-        return repositorio.trocar(id, comId);
+        return repositorio.trocar(id, nova)
+                .map(this::paraResposta);
     }
 
     public boolean apagar(String id) {
         return repositorio.remover(id);
+    }
+
+    private PessoaResposta paraResposta(Pessoa pessoa) {
+        return new PessoaResposta(
+                pessoa.id(),
+                pessoa.nome(),
+                pessoa.email(),
+                pessoa.area(),
+                pessoa.senioridade()
+        );
     }
 }
