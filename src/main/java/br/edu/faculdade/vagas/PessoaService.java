@@ -1,4 +1,3 @@
-
 package br.edu.faculdade.vagas;
 
 import org.springframework.stereotype.Service;
