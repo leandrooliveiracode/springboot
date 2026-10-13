@@ -1,4 +1,3 @@
-
 package br.edu.faculdade.vagas;
 
 import jakarta.validation.Valid;
