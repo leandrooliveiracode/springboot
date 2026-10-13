@@ -1,17 +1,60 @@
+
 package br.edu.faculdade.vagas;
 
-/**
- * Frente 2 · quem publica as vagas.
- *
- * O identificador desta frente é o slug, não o id: é ele que vai na URL, é ele
- * que a Vaga guarda em empresaSlug, e é ele que o cliente escolhe ao criar.
- * O id continua aqui por herança da aula 02 — na aula 05, quando o banco
- * entrar, ele passa a ser gerado por lá.
- */
-public record Empresa(
-    String id,
-    String nome,
-    String slug,
-    String site,
-    String descricao
-) { }
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class TratadorDeErros {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail campoInvalido(
+            MethodArgumentNotValidException e) {
+
+        ProblemDetail problema = ProblemDetail
+                .forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        "Um ou mais campos estão inválidos."
+                );
+
+        problema.setTitle("Dados inválidos");
+
+        Map<String, String> erros = new LinkedHashMap<>();
+
+        e.getBindingResult()
+                .getFieldErrors()
+                .forEach(f ->
+                        erros.put(
+                                f.getField(),
+                                f.getDefaultMessage()
+                        )
+                );
+
+        problema.setProperty("campos", erros);
+
+        return problema;
+    }
+
+    @ExceptionHandler(EmpresaSlugDuplicadoException.class)
+    public ProblemDetail empresaSlugDuplicado(
+            EmpresaSlugDuplicadoException e) {
+
+        ProblemDetail problema = ProblemDetail
+                .forStatusAndDetail(
+                        HttpStatus.CONFLICT,
+                        e.getMessage()
+                );
+
+        problema.setTitle("Empresa já cadastrada");
+
+        return problema;
+    }
+}
+
+}
